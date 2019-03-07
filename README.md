@@ -7,8 +7,15 @@ mongo-lock
 MongoDB advisory string locks patterned after MySQL `GET_LOCK()` et al.
 
 The locks are implemented with small documents inserted atomically into the collection given
-to the constructor.  The locked strings are used as the document `_id`, and are limited to
-1000 characters by mongodb.
+to the constructor.  The locked resource name strings are used for the document `_id`, and
+are limited to 1000 characters by mongodb.
+
+    const MongoLock = require('mongo-lock');
+    const locks = new MongoLock(mongodb.db('lockDb').collection('locks'));
+    locks.getLock(resourceName, ownerName, waitMs, lockTimeoutMs, (err) => {
+        if (err) throw new Error('unable to acquire resource');
+        // resource acquired by owner, mutex expires in lockTimeoutMs
+    })
 
 
 ## API
