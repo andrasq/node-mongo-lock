@@ -55,28 +55,68 @@ module.exports = {
         },
 
         'should use default lockTimeout': function(t) {
-            t.skip();
+            var now = Date.now();
+            var spy = t.spy(this.db, 'insert');
+            t.equal(this.lock.lockTimeout, 20000);
+            this.lock.getLock('someName', 'someOwner', 0, function(err) {
+                t.ok(spy.called);
+                t.ok(spy.args[0][0].expires > new Date(now + 19900).toISOString());
+                // TODO: every now and then the below line fails:
+                t.ok(spy.args[0][0].expires <= new Date(now + 20000).toISOString());
+                t.done();
+            })
         },
 
         'should use provided lockTimeout': function(t) {
-            t.skip();
+            var now = Date.now();
+            var spy = t.spy(this.db, 'insert');
+            this.lock.getLock('someName', 'someOwner', 0, 30000, function(err) {
+                t.ok(spy.called);
+                t.ok(spy.args[0][0].expires > new Date(now + 29900).toISOString());
+                t.ok(spy.args[0][0].expires <= new Date(now + 30000).toISOString());
+                t.done();
+            })
         },
 
         'should return database error': function(t) {
-            t.skip();
+            t.stubOnce(this.db, 'insert').yields('mock db error');
+            this.lock.getLock('someName', 'someOwner', 0, 20000, function(err) {
+                t.equal(err, 'mock db error');
+                t.done();
+            })
         },
 
         'if locked': {
             'should try to expire lock': function(t) {
-                t.skip();
+                var error = { code: 11000, message: 'duplicate key error' };
+                t.stub(this.db, 'insert').yields(error);
+                var spy = t.stubOnce(this.lock, '_expireLock').yields();
+                this.lock.getLock('someString', 'someOwner', 0, function(err) {
+                    t.equal(err, error);
+                    t.ok(spy.called);
+                    t.done();
+                })
             },
 
-            'should retry after expire even no waitTime': function(t) {
-                t.skip();
+            'should retry after expire even with no waitTime': function(t) {
+                var now = Date.now();
+                var spy = t.stub(this.db, 'insert').yieldsOnce({ message: 'duplicate key error' }).yields();
+                this.lock.getLock('someString', 'someOwner', 0, function(err) {
+                    t.ifError(err);
+                    t.equal(spy.callCount, 2);
+                    t.done();
+                })
             },
 
             'should retry until waitTime timeout': function(t) {
-                t.skip();
+                var now = Date.now();
+                var error = { code: 11000, message: 'duplicate key error' };
+                t.stub(this.db, 'insert').yields(error);
+                this.lock.getLock('someString', 'someOwner', 100, function(err) {
+                    t.equal(err, error);
+                    t.ok(Date.now() >= now + 100);
+                    t.done();
+                })
             },
         },
     },
@@ -100,13 +140,91 @@ module.exports = {
             })
         },
     },
+
+    'renewLock': {
+        'should require lockTimeout and callback': function(t) {
+            var lock = this.lock;
+            t.throws(function() { lock.renewLock('someName', 'someOwner', function() {}) }, /lockTimeout/);
+            t.throws(function() { lock.renewLock('someName', 'someOwner', "foo") }, /lockTimeout/);
+            t.throws(function() { lock.renewLock('someName', 'someOwner', 7) }, /callback/);
+            t.done();
+        },
+
+        'should call db.update with the new expires': function(t) {
+            var self = this;
+            var spy = t.spyOnce(self.db, 'update');
+            var now = Date.now();
+            this.lock.renewLock('someName', 'someOwner', 10000, function(err) {
+                t.ok(spy.called);
+                t.equal(spy.args[0][0]._id, 'someName');
+                t.equal(spy.args[0][0].owner, 'someOwner');
+                t.ok(spy.args[0][1].$set.expires > new Date(now + 9900).toISOString());
+                t.ok(spy.args[0][1].$set.expires <= new Date(now + 10000).toISOString());
+                t.equal(spy.args[0][2].upsert, true);
+                t.done();
+            })
+        },
+
+        'should return confirmation that lock was renewed': function(t) {
+            t.skip();
+        },
+    },
+
+    'isFreeLock': {
+        'should call isUsedLock': function(t) {
+            var lock = this.lock;
+            var spy = t.stubOnce(lock, 'isUsedLock').yields(null, 'user123');
+            lock.isFreeLock(this.name, function(err, ret) {
+                t.ok(spy.called);
+                t.strictEqual(ret, false);
+                t.done();
+            })
+        },
+
+        'returns isUsedLock errors': function(t) {
+            var spy = t.stubOnce(this.lock, 'isUsedLock').yields('mock isUsedLock error');
+            this.lock.isFreeLock(this.name, function(err, ret) {
+                t.ok(spy.called);
+                t.equal(err, 'mock isUsedLock error');
+                t.done();
+            })
+        },
+    },
+
+    'isUsedLock': {
+        'should call findOne': function(t) {
+            var spy = t.spyOnce(this.db, 'findOne');
+            this.lock.isUsedLock(this.name, function(err, ret) {
+                t.ok(spy.called);
+                t.done();
+            })
+        },
+
+        'returns mongo errors': function(t) {
+            var spy = t.stubOnce(this.db, 'findOne').yields('mock mongo error');
+            this.lock.isUsedLock(this.name, function(err, ret) {
+                t.ok(spy.called);
+                t.equal(err, 'mock mongo error');
+                t.done();
+            })
+        },
+
+        'returns the lock owner': function(t) {
+            var spy = t.stubOnce(this.db, 'findOne').yields(null, { _id: 'someName', owner: 'someOwner', expires: new Date().toISOString() });
+            this.lock.isUsedLock(this.name, function(err, ret) {
+                t.ifError(err);
+                t.equal(ret, 'someOwner');
+                t.done();
+            })
+        },
+    },
 }
 
 function getMockDb( ) {
     return {
         insert: function(entity, opts, cb) { cb() },
         remove: function(query, opts, cb) { cb() },
-        findOne: function(query, opts, cb) { cb() },
+        findOne: function(query, cb) { cb() },
         update: function(query, entity, opts, cb) { cb() },
     }
 }

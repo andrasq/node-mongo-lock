@@ -36,7 +36,7 @@ MongoLock.prototype.getLock = function getLock( name, owner, waitTime, lockTimeo
         var expires = now + lockTimeout;
         // note: could also be done with an upsert, but the insert is more bulletproof
         self.db.insert({ _id: String(name), owner: String(owner), expires: self._getTimestamp(expires) }, { w: 1 }, function(err) {
-            if (err && (err.code == 11000 || err.message.indexOf('duplicate key error') >= 0)) {
+            if (err && (err.code == 11000 || err.message && err.message.indexOf('duplicate key error') >= 0)) {
                 if (attemptCount === 1) self._expireLock(name, function(err) { setImmediate(tryToLock) });
                 else if (now <= retryUntil) setTimeout(tryToLock, 5);
                 else callback(err);
@@ -51,9 +51,10 @@ MongoLock.prototype.releaseLock = function releaseLock( name, owner, callback ) 
 }
 
 MongoLock.prototype.renewLock = function renewLock( name, owner, lockTimeout, callback ) {
+    if (!(lockTimeout >= -Infinity) || typeof callback !== 'function') throw new TypeError('lockTimeout and callback required');
     var expires = Date.now() + lockTimeout;
     // FIXME: return feedback of whether the renew was successful
-    if (expires > 0) this.db.update({ _id: String(name), owner: String(owner) }, { $set: { expires: this._getTimestamp(expires) } }, { w: 1, upsert: true }, callback);
+    this.db.update({ _id: String(name), owner: String(owner) }, { $set: { expires: this._getTimestamp(expires) } }, { w: 1, upsert: true }, callback);
 }
 
 MongoLock.prototype.isFreeLock = function isFreeLock( name, callback ) {
@@ -64,7 +65,7 @@ MongoLock.prototype.isFreeLock = function isFreeLock( name, callback ) {
 
 MongoLock.prototype.isUsedLock = function isUsedLock( name, callback ) {
     this.db.findOne({ _id: name }, function(err, doc) {
-        return err ? callback(err) : callback(null, doc && doc[0] && doc[0].owner);
+        return err ? callback(err) : callback(null, doc && doc.owner);
     })
 }
 
