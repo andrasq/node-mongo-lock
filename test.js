@@ -68,9 +68,9 @@ module.exports = {
             t.equal(this.lock.lockTimeout, 20000);
             this.lock.getLock('someName', 'someOwner', 0, function(err) {
                 t.ok(spy.called);
-                t.ok(spy.args[0][0].expires > new Date(now + 19900).toISOString());
+                t.ok(spy.args[0][0].expires >= new Date(now + 20000).toISOString());
                 // TODO: every now and then the below line fails:
-                t.ok(spy.args[0][0].expires <= new Date(now + 20000).toISOString());
+                t.ok(spy.args[0][0].expires < new Date(now + 20100).toISOString());
                 t.done();
             })
         },
@@ -80,8 +80,8 @@ module.exports = {
             var spy = t.spy(this.db, 'insert');
             this.lock.getLock('someName', 'someOwner', 0, 30000, function(err) {
                 t.ok(spy.called);
-                t.ok(spy.args[0][0].expires > new Date(now + 29900).toISOString());
-                t.ok(spy.args[0][0].expires <= new Date(now + 30000).toISOString());
+                t.ok(spy.args[0][0].expires >= new Date(now + 30000).toISOString());
+                t.ok(spy.args[0][0].expires < new Date(now + 30100).toISOString());
                 t.done();
             })
         },
@@ -166,8 +166,8 @@ module.exports = {
                 t.ok(spy.called);
                 t.equal(spy.args[0][0]._id, 'someName');
                 t.equal(spy.args[0][0].owner, 'someOwner');
-                t.ok(spy.args[0][1].$set.expires > new Date(now + 9900).toISOString());
-                t.ok(spy.args[0][1].$set.expires <= new Date(now + 10000).toISOString());
+                t.ok(spy.args[0][1].$set.expires >= new Date(now + 10000).toISOString());
+                t.ok(spy.args[0][1].$set.expires < new Date(now + 10100).toISOString());
                 t.equal(spy.args[0][2].upsert, true);
                 t.done();
             })
