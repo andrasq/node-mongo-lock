@@ -11,6 +11,14 @@ module.exports = {
         done();
     },
 
+    'should be both a constructor and a factory': function(t) {
+        var lock1 = new MongoLock(getMockDb());
+        var lock2 = MongoLock(getMockDb());
+        t.ok(lock1 instanceof MongoLock);
+        t.ok(lock2 instanceof MongoLock);
+        t.done();
+    },
+
     'should export expected methods': function(t) {
         var lock = new MongoLock(getMockDb());
         var expected = ['getLock', 'releaseLock', 'renewLock', 'isFreeLock', 'isUsedLock'];

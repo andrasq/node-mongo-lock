@@ -10,6 +10,7 @@ module.exports = MongoLock;
 
 
 function MongoLock( db ) {
+    if (!(this instanceof MongoLock)) return new MongoLock(db);
     this.db = db;
     this.lockTimeout = 20000;
     if (!this.db) throw new Error('missing db');
