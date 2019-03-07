@@ -51,3 +51,8 @@ Return the owner of the named lock, else falsy (null).  Owners are identified by
 ### isFreeLock( name, callback(err, yesNo) )
 
 Return true if the lock is free (mutex not set), false if it not.
+
+
+## Changelog
+
+- 0.8.2 - first published version
