@@ -10,6 +10,8 @@ The locks are implemented with small documents inserted atomically into the coll
 to the constructor.  The locked resource name strings are used for the document `_id`, and
 are limited to 1000 characters by mongodb.
 
+Small, flexible, and no dependencies (not ES6, not even mongodb); tested down to node-v0.6.
+
     const MongoLock = require('mongo-lock');
     const locks = new MongoLock(mongodb.db('lockDb').collection('locks'));
     locks.getLock(resourceName, ownerName, waitMs, lockTimeoutMs, (err) => {

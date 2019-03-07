@@ -7,6 +7,7 @@
 'use strict';
 
 module.exports = MongoLock;
+eval("if (!global.setImmediate) global.setImmediate = process.nextTick");
 
 
 function MongoLock( db ) {
