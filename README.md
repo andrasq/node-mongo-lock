@@ -6,6 +6,10 @@ mongo-lock
 
 MongoDB advisory string locks patterned after MySQL `GET_LOCK()` et al.
 
+The locks are implemented with small documents inserted atomically into the collection given
+to the constructor.  The locked strings are used as the document `_id`, and are limited to
+1000 characters by mongodb.
+
 
 ## API
 
@@ -19,6 +23,8 @@ The database gateway `db` must have methods
 - findOne( query, cb )
 - update( query, entity, options, cb )
 - remove( query, options, cb )
+
+The options used will be `{ w: 1 }` and, for update, `{ upsert: 1 }`.
 
 ### getLock( name, owner, waitTimeMs, [lockTimeoutMs,] callback(err) )
 
