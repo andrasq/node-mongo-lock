@@ -1,6 +1,7 @@
 language: node_js
 node_js:
-  - 0.6
+  #- 0.6 -- breaks, travis-ci builds node-v0.6 from sources, kills test (too many output lines)
+  - 0.8
   - 0.10
   - 8
   - 11
