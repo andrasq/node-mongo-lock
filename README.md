@@ -1,5 +1,8 @@
 mongo-lock
 ==========
+[![Build Status](https://api.travis-ci.org/andrasq/node-mongo-lock.svg?branch=master)](https://travis-ci.org/andrasq/node-mongo-lock?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/andrasq/node-mongo-lock/badge.svg?branch=master)](https://coveralls.io/github/andrasq/node-mongo-lock?branch=master)
+
 
 MongoDB advisory string locks patterned after MySQL `GET_LOCK()` et al.
 
