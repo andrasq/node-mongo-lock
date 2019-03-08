@@ -1,14 +1,15 @@
 {
   "name": "mongo-lock",
   "version": "0.8.2",
-  "description": "mongodb atomic advisory locks like mysql GET_LOCK()",
   "main": "mongolock.js",
   "license": "Apache-2.0",
-  "keywords": [],
+  "description": "mongodb atomic advisory locks like mysql GET_LOCK()",
+  "keywords": ["MongoDB", "advisory", "atomic", "locks", "GET_LOCK"],
+  "files": ["mongolock.js", "README.md"],
+
   "author": "andrasq",
   "repository": { "type": "git", "url": "https://github.com/andrasq/node-mongo-lock" },
   "readme": "see README.md in the repo",
-  "files": ["mongolock.js", "README.md"],
 
   "scripts": {
     "test": "qnit test.js",
