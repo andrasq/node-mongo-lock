@@ -24,7 +24,7 @@ Small, flexible, and no dependencies (not ES6, not even mongodb); tested down to
 
 ### locks = new MongoLock( db )
 
-Create a mongodb advisory lock gateway.  The locks will be set using the database gateway
+Create a mongodb advisory lock agent.  The locks will be set using the database gateway
 provided to the constructor; it can be a mongodb collection object.
 
 The database gateway `db` must have methods
@@ -33,7 +33,7 @@ The database gateway `db` must have methods
 - update( query, entity, options, cb )
 - remove( query, options, cb )
 
-The options used will be `{ w: 1 }` and, for update, `{ upsert: 1 }`.
+The options used will be `{ w: 1 }` and, for update, `{ w: 1, upsert: 1 }`.
 
 ### getLock( name, owner, waitTimeMs, [lockTimeoutMs,] callback(err) )
 
